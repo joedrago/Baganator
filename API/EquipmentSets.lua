@@ -175,8 +175,43 @@ if not addonTable.Constants.IsEra and Syndicator then
   end
 end
 
--- ItemRack Classic
 if not addonTable.Constants.IsRetail then
+  -- GearQuipper (GearQuipper-TBC)
+  addonTable.Utilities.OnAddonLoaded("GearQuipper-TBC", function()
+    Baganator.API.RegisterItemSetSource("GearQuipper", "gearquipper", function(_, guid, itemLink)
+      -- if not guid or not itemLink then
+      --   return
+      -- end
+      local itemID = C_Item.GetItemInfoInstant(itemLink)
+      if not itemID then
+        return
+      end
+
+      local result = {}
+      for _, setName in ipairs(gearquipper:LoadSetNames()) do
+        for slotId, itemString in pairs(gearquipper:LoadSet(setName)) do
+          local gqItemID = C_Item.GetItemInfoInstant(itemString)
+          if gqItemID ~= nil then
+            if itemID == gqItemID then
+              table.insert(result, {
+                name = setName,
+                -- iconTexture = outfit:GetIcon(),
+              })
+            end
+          end
+        end
+      end
+      return result
+    end, function()
+      local equipmentSetNames = {}
+      for _, setName in ipairs(gearquipper:LoadSetNames()) do
+        table.insert(equipmentSetNames, setName)
+      end
+      return equipmentSetNames
+    end)
+  end)
+
+  -- ItemRack Classic
   addonTable.Utilities.OnAddonLoaded("ItemRack", function()
     local equipmentSetInfo = {}
     local equipmentSetNames = {}
