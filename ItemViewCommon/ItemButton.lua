@@ -590,7 +590,7 @@ end
 local queue = {}
 local callbackHolder = {}
 function BaganatorRetailLiveContainerItemButtonMixin:PreClickHook(mouseButton)
-  if mouseButton == "RightButton" and BankPanel:IsShown() and tIndexOf(Syndicator.Constants.AllBagIndexes, self:GetParent():GetID()) ~= nil then
+  if mouseButton == "RightButton" and not IsModifiedClick() and BankPanel:IsShown() and tIndexOf(Syndicator.Constants.AllBagIndexes, self:GetParent():GetID()) ~= nil then
     addonTable.BankTransferManager:Queue(self:GetParent():GetID(), self:GetID())
   end
 end
