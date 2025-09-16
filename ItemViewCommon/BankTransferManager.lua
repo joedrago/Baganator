@@ -8,6 +8,7 @@ function addonTable.BankTransferManagerMixin:OnLoad()
     return
   end
   self.allocatedSlots = {}
+  self.queue = {}
 end
 
 function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
@@ -31,10 +32,10 @@ function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
   local targets = addonTable.Transfers.GetCurrentBankSlots()
   local stackLimit = C_Item.GetItemMaxStackSizeByID(source.itemID)
 
-  local match
+  local matches = {}
   for index, item in ipairs(targets) do
     if (self.allocatedSlots[item.bagID] == nil or not self.allocatedSlots[item.bagID][item.slotID]) and (
-      item.itemID == nil or (item.itemID == source.itemID and item.itemCount + source.itemCount <= stackLimit)
+      item.itemID == nil or (item.itemID == source.itemID and item.itemCount < stackLimit)
     ) then
       match = item
       break
@@ -49,6 +50,10 @@ function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
 
     Syndicator.CallbackRegistry:RegisterCallback("BagCacheUpdate", self.BagUpdate, self)
     Syndicator.CallbackRegistry:RegisterCallback("WarbandBankCacheUpdate", self.BagUpdate, self)
+
+    if match.itemCount and match.itemCount + source.itemCount > stackLimit then
+      table.insert(self.queue, {bagID = bagID, slotID = slotID})
+    end
   else
     UIErrorsFrame:AddMessage(addonTable.Locales.CANNOT_MOVE_ITEMS_AS_NO_SPACE_LEFT, 1.0, 0.1, 0.1, 1.0)
   end
@@ -57,6 +62,10 @@ end
 function addonTable.BankTransferManagerMixin:BagUpdate()
   if not BankPanel:IsShown() then
     self.allocatedSlots = {}
+  end
+  if #self.queue > 0 then
+    local item = table.remove(self.queue)
+    self:Queue(item.bagID, item.slotID)
   end
   for bagID, slots in pairs(self.allocatedSlots) do
     for slotID, state in pairs(slots) do
