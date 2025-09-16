@@ -94,6 +94,7 @@ ItemViewCommon\BankViewWarbandView.lua
 ItemViewCommon\BankViewWarbandView.xml
 ItemViewCommon\BankView.lua
 ItemViewCommon\BankView.xml
+ItemViewCommon\BankTransferManager.lua
 ItemViewCommon\BagTransfers.lua
 ItemViewCommon\NewItemsTracking.lua
 ItemViewCommon\AnchorSetter.lua
