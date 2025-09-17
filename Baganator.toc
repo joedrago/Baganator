@@ -37,10 +37,10 @@ Core\SlashCmd.lua
 Core\Welcome.lua
 Core\Analytics.lua
 Core\Dialogs.lua
-Core\Main.lua
+Core\Initialize.lua
 
 Skins\Utilities.lua
-Skins\Main.lua
+Skins\Initialize.lua
 Skins\Blizzard.lua
 Skins\Dark.lua
 Skins\ElvUI.lua
