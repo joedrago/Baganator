@@ -89,11 +89,27 @@ function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
     end
   end
 
+  local function CheckStackTargets(targets)
+    for index, item in ipairs(targets) do
+      if (self.allocatedSlots[item.bagID] == nil or not self.allocatedSlots[item.bagID][item.slotID]) and (
+        item.itemID ~= nil and item.itemID == source.itemID and item.itemCount < stackLimit
+      ) then
+        match = item
+        break
+      end
+    end
+  end
+
   -- Tabs with specific items in them prioritised
   for tabIndex, tabDetails in ipairs(tabData) do
+    local targets = addonTable.Transfers.GetBagsSlots({tabDetails.slots}, {indexes[tabIndex]})
     if GetMatching(tabDetails.depositFlags, source) then
-      local targets = addonTable.Transfers.GetBagsSlots({tabDetails.slots}, {indexes[tabIndex]})
       CheckTargets(targets)
+      if match then
+        break
+      end
+    else
+      CheckStackTargets(targets)
       if match then
         break
       end
