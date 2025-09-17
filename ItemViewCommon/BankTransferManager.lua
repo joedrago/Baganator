@@ -11,6 +11,43 @@ function addonTable.BankTransferManagerMixin:OnLoad()
   self.queue = {}
 end
 
+local function GetMatching(tabFlags, item)
+  if tabFlags == 0 then
+    return false
+  end
+
+  local class, subClass, _, xpac, _, isReagent = select(12, C_Item.GetItemInfo(item.itemID))
+  local expansionFlags = {
+    [Enum.BagSlotFlags.ExpansionCurrent] = xpac and xpac == LE_EXPANSION_LEVEL_CURRENT or false,
+    [Enum.BagSlotFlags.ExpansionLegacy] = xpac and xpac ~= LE_EXPANSION_LEVEL_CURRENT or false,
+  }
+  for flag, state in pairs(expansionFlags) do
+    if FlagsUtil.IsSet(tabFlags, flag) then
+      if not state then
+        return false
+      end
+    end
+  end
+
+  local typeFlags = {
+    [Enum.BagSlotFlags.ClassEquipment] = class == Enum.ItemClass.Armor or class == Enum.ItemClass.Weapon,
+    [Enum.BagSlotFlags.ClassConsumables] = class == Enum.ItemClass.Consumable,
+    [Enum.BagSlotFlags.ClassProfessionGoods] = (class == Enum.ItemClass.Tradegoods or class == Enum.ItemClass.Container or class == Enum.ItemClass.Profession or class == Enum.ItemClass.Gem) and not isReagent,
+    [Enum.BagSlotFlags.ClassReagents] = isReagent or false,
+    [Enum.BagSlotFlags.ClassJunk] = item.quality == 0,
+  }
+  local typesSet = false
+  for flag, state in pairs(typeFlags) do
+    if FlagsUtil.IsSet(tabFlags, flag) then
+      typesSet = true
+      if state then
+        return true
+      end
+    end
+  end
+  return not typesSet
+end
+
 function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
   if not C_Bank or not BankPanel:IsShown() then
     return
@@ -29,23 +66,50 @@ function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
     return
   end
 
-  local targets = addonTable.Transfers.GetCurrentBankSlots()
-  local stackLimit = C_Item.GetItemMaxStackSizeByID(source.itemID)
+  local tabData, indexes
+  if addonTable.Config.Get(addonTable.Config.Options.BANK_CURRENT_TAB) == addonTable.Constants.BankTabType.Character then
+    tabData = Syndicator.API.GetCharacter(Syndicator.API.GetCurrentCharacter()).bankTabs
+    indexes = Syndicator.Constants.AllBankIndexes
+  else
+    tabData = Syndicator.API.GetWarband(1).bank
+    indexes = Syndicator.Constants.AllWarbandIndexes
+  end
 
-  local matches = {}
-  for index, item in ipairs(targets) do
-    if (self.allocatedSlots[item.bagID] == nil or not self.allocatedSlots[item.bagID][item.slotID]) and (
-      item.itemID == nil or (item.itemID == source.itemID and item.itemCount < stackLimit)
-    ) then
-      match = item
-      break
+  local stackLimit = C_Item.GetItemMaxStackSizeByID(source.itemID)
+  local match
+
+  local function CheckTargets(targets)
+    for index, item in ipairs(targets) do
+      if (self.allocatedSlots[item.bagID] == nil or not self.allocatedSlots[item.bagID][item.slotID]) and (
+        item.itemID == nil or (item.itemID == source.itemID and item.itemCount < stackLimit)
+      ) then
+        match = item
+        break
+      end
     end
   end
+
+  -- Tabs with specific items in them prioritised
+  for tabIndex, tabDetails in ipairs(tabData) do
+    if GetMatching(tabDetails.depositFlags, source) then
+      local targets = addonTable.Transfers.GetBagsSlots({tabDetails.slots}, {indexes[tabIndex]})
+      CheckTargets(targets)
+      if match then
+        break
+      end
+    end
+  end
+
+  -- Fallback to current view
+  if not match then
+    local targets = addonTable.Transfers.GetCurrentBankSlots()
+    CheckTargets(targets)
+  end
+  C_Container.PickupContainerItem(bagID, slotID)
   if match then
     self.allocatedSlots[match.bagID] = self.allocatedSlots[match.bagID] or {}
     self.allocatedSlots[match.bagID][match.slotID] = true
 
-    C_Container.PickupContainerItem(bagID, slotID)
     C_Container.PickupContainerItem(match.bagID, match.slotID)
 
     Syndicator.CallbackRegistry:RegisterCallback("BagCacheUpdate", self.BagUpdate, self)
@@ -56,6 +120,9 @@ function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
     end
   else
     UIErrorsFrame:AddMessage(addonTable.Locales.CANNOT_MOVE_ITEMS_AS_NO_SPACE_LEFT, 1.0, 0.1, 0.1, 1.0)
+    C_Timer.After(0, function()
+      ClearCursor()
+    end)
   end
 end
 
