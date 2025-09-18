@@ -67,12 +67,15 @@ function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
   end
 
   local tabData, indexes
-  if addonTable.Config.Get(addonTable.Config.Options.BANK_CURRENT_TAB) == addonTable.Constants.BankTabType.Character then
+  local bankFrame = addonTable.ViewManagement.GetBankFrame()
+  if bankFrame.Character:IsVisible() then
     tabData = Syndicator.API.GetCharacter(Syndicator.API.GetCurrentCharacter()).bankTabs
     indexes = Syndicator.Constants.AllBankIndexes
-  else
+  elseif bankFrame.Warband:IsVisible() then
     tabData = Syndicator.API.GetWarband(1).bank
     indexes = Syndicator.Constants.AllWarbandIndexes
+  else
+    error("Unknown bank type")
   end
 
   local stackLimit = C_Item.GetItemMaxStackSizeByID(source.itemID)
