@@ -11,18 +11,14 @@ function addonTable.BankTransferManagerMixin:OnLoad()
   self.queue = {}
 end
 
-local function GetMatching(tabFlags, item)
-  if tabFlags == 0 then
-    return false
-  end
-
+local function GetMatching(depositFlags, item)
   local class, subClass, _, xpac, _, isReagent = select(12, C_Item.GetItemInfo(item.itemID))
   local expansionFlags = {
     [Enum.BagSlotFlags.ExpansionCurrent] = xpac and xpac == LE_EXPANSION_LEVEL_CURRENT or false,
     [Enum.BagSlotFlags.ExpansionLegacy] = xpac and xpac ~= LE_EXPANSION_LEVEL_CURRENT or false,
   }
   for flag, state in pairs(expansionFlags) do
-    if FlagsUtil.IsSet(tabFlags, flag) then
+    if FlagsUtil.IsSet(depositFlags, flag) then
       if not state then
         return false
       end
@@ -38,14 +34,14 @@ local function GetMatching(tabFlags, item)
   }
   local typesSet = false
   for flag, state in pairs(typeFlags) do
-    if FlagsUtil.IsSet(tabFlags, flag) then
+    if FlagsUtil.IsSet(depositFlags, flag) then
       typesSet = true
       if state then
         return true
       end
     end
   end
-  return not typesSet
+  return not typesSet and depositFlags ~= 0 and depositFlags ~= Enum.BagSlotFlags.DisableAutoSort
 end
 
 function addonTable.BankTransferManagerMixin:Queue(bagID, slotID)
