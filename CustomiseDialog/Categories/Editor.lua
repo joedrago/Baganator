@@ -213,7 +213,7 @@ function BaganatorCustomiseDialogCategoriesEditorMixin:OnLoad()
     local categoryMods = addonTable.Config.Get(addonTable.Config.Options.CATEGORY_MODIFICATIONS)
 
     self.CategoryName:SetText(category.name)
-    self.CategorySearch:SetText(category.search and category.search:gsub("%|", "||") or "")
+    self.CategorySearch:SetText(category.search and addonTable.CustomiseDialog.CleanupSearch(category.search))
     self.PrioritySlider:SetValue(categoryMods[value] and categoryMods[value].priority or -1)
 
     self.GroupDropDown:Enable()
@@ -424,7 +424,7 @@ function BaganatorCustomiseDialogCategoriesEditorMixin:OnLoad()
     end
 
     if self.currentCategory ~= "-1" and oldSearch then
-      self.CategorySearch:SetText((oldSearch:GetText():gsub("%|", "||")))
+      self.CategorySearch:SetText(addonTable.CustomiseDialog.CleanupSearch(oldSearch:GetText()))
     end
     if oldSearch then
       if oldSearch.IsEnabled then
@@ -467,7 +467,7 @@ function BaganatorCustomiseDialogCategoriesEditorMixin:OnLoad()
       return
     end
 
-    addonTable.Dialogs.ShowCopy(addonTable.CustomiseDialog.SingleCategoryExport(self.currentCategory):gsub("%|", "||"))
+    addonTable.Dialogs.ShowCopy(addonTable.CustomiseDialog.CleanupSearch(addonTable.CustomiseDialog.SingleCategoryExport(self.currentCategory)))
   end)
 
   self.DeleteButton:SetScript("OnClick", function()
