@@ -15,4 +15,3 @@ plain-copy:
   - Compatibility
 required-dependencies:
   - syndicator
-enable-toc-creation: yes
