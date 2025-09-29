@@ -71,7 +71,6 @@ function addonTable.Core.RunAnalytics()
     [addonTable.Config.Options.LOCK_FRAMES] = true,
     [addonTable.Config.Options.SHOW_SORT_BUTTON] = true,
     [addonTable.Config.Options.HIDE_BOE_ON_COMMON] = true,
-    [addonTable.Config.Options.SHOW_RECENTS_TABS] = true,
     [addonTable.Config.Options.ICON_TEXT_QUALITY_COLORS] = true,
     [addonTable.Config.Options.ICON_TEXT_FONT_SIZE] = true,
     [addonTable.Config.Options.ICON_GREY_JUNK] = true,
