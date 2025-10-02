@@ -29,7 +29,7 @@ monitor:SetScript("OnEvent", function(self, eventName, unit, castID, spellID)
     counter = counter - 1
   elseif eventName == "UNIT_SPELLCAST_STOP" then
     counter = counter - 1
-    C_Timer.After(0.25, function()
+    C_Timer.After(0.5, function()
       Baganator.API.RequestItemButtonsRefresh()
     end)
   end
