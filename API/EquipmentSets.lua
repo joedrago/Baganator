@@ -84,7 +84,10 @@ if not addonTable.Constants.IsEra and Syndicator then
           if locationID ~= -1 and locationID ~= 0 and locationID ~= 1 then
             local player, bank, bags, _, slot, bag
             if addonTable.Constants.IsClassic then
-              player, bank, bags, slot, bag = EquipmentManager_UnpackLocation(locationID)
+              player, bank, bags, slot, bag = (EquipmentManager_GetLocationData or EquipmentManager_UnpackLocation)(locationID)
+            elseif EquipmentManager_GetLocationData then
+              local locationData = EquipmentManager_GetLocationData(locationID)
+              player, bank, bags, slot, bag = locationData.isPlayer, locationData.isBank, locationData.isBags, locationData.slot, locationData.bag
             else
               player, bank, bags, _, slot, bag = EquipmentManager_UnpackLocation(locationID)
             end
